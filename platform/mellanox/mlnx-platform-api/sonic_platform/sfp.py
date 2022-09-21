@@ -53,6 +53,8 @@ try:
         SX_PORT_MODULE_STATUS_UNPLUGGED = 2
         SX_PORT_MODULE_STATUS_PLUGGED_WITH_ERROR = 3
         SX_PORT_MODULE_STATUS_PLUGGED_DISABLED = 4
+        SX_PORT_ADMIN_STATUS_UP = True
+        SX_PORT_ADMIN_STATUS_DOWN = False
 except KeyError:
     pass
 
@@ -357,7 +359,8 @@ class SFP(NvidiaSFPCommon):
         try:
             output = subprocess.check_output(ethtool_cmd,
                                              shell=True,
-                                             universal_newlines=True)
+                                             universal_newlines=True,
+                                             stderr=subprocess.PIPE)
             output_lines = output.splitlines()
             first_line_raw = output_lines[0]
             if "Offset" in first_line_raw:
@@ -365,6 +368,7 @@ class SFP(NvidiaSFPCommon):
                     line_split = line.split()
                     eeprom_raw = eeprom_raw + line_split[1:]
         except subprocess.CalledProcessError as e:
+            logger.log_notice("Failed to get EEPROM data for sfp {}: {}".format(self.index, e.stderr))
             return None
 
         eeprom_raw = list(map(lambda h: int(h, base=16), eeprom_raw))
@@ -571,7 +575,7 @@ class SFP(NvidiaSFPCommon):
     @classmethod
     def is_port_admin_status_up(cls, sdk_handle, log_port):
         _, admin_state = cls._fetch_port_status(sdk_handle, log_port);
-        admin_state == SX_PORT_ADMIN_STATUS_UP
+        return admin_state == SX_PORT_ADMIN_STATUS_UP
 
 
     @classmethod
