@@ -246,6 +246,7 @@ function RunFwUpdateCmd() {
     ERROR_CODE="$?"
 
     if [[ "${ERROR_CODE}" == "${FW_ALREADY_UPDATED_FAILURE}" ]]; then
+        LogInfo "FW reactivation is required. Reactivating and updating FW ..."
         local -r _MST_DEVICE="$(GetMstDevice)"
         local -r _CMD="flint -d ${_MST_DEVICE} ir"
         output=$(eval "${_CMD}")
